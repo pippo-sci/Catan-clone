@@ -37,16 +37,48 @@ const margin = 20;
 const w = (canvas.width - margin * 2) / 5;
 const h = (canvas.height - margin * 2) / 5;
 
+
+/*
+for (let i = 0; i < 5; i++){
+    r = 5 - Math.abs(j % 5);
+    
+    for (let e = 0; e < r; e++){
+        const x = r * w + margin;
+        const y = e * h + margin;
+        context.fillStyle = 'brown';
+        
+        context.save();
+        drawHexagon(context, x + w/2, y + w/2, w/2);
+        context.rect(x, y, w, h);
+        context.stroke();
+        context.restore();
+        
+    }
+    console.log(r, i, j);
+    j--;
+}
+*/
 let j = 2;
 let r;
+let a = 0;
+let b = 0;
 
 for (let i = 0; i < 19; i++){
     
+    if (i - a == r) {
+        j--;
+        a = a + r;
+        b++;
+    }
+
     r = 5 - Math.abs(j % 5);
-    console.log(r, j);
-    const x = (i % r) * w + margin; 
-    const y = Math.floor(i / r) * h + margin;
-    if (Math.floor(i / r) == j) j--;
+
+    
+    //console.log(r, j);
+    const x = (i - a) * w + margin; 
+    const y = b * h + margin;
+
+    console.log(i,j, r, i-a, b);
 
     context.fillStyle = 'brown';
     
@@ -56,6 +88,7 @@ for (let i = 0; i < 19; i++){
     context.stroke();
     context.restore();
 }
+
 
 //for (let i = 0; i > -10; i--) {console.log(i % 5);}
 
