@@ -11,7 +11,7 @@ const drawHexagon = (ctx, x, y, r) => {
     ctx.beginPath();
     for (let i= 0; i < 6; i++){
         
-        ctx.lineTo(0 + r * Math.cos(a * i), 0 + r * Math.sin(a * i));
+        ctx.lineTo(r * Math.cos(a * i), r * Math.sin(a * i));
     }
     ctx.fill();
     //ctx.stroke();
@@ -25,7 +25,7 @@ canvas.height = 600;
 const context = canvas.getContext("2d");
 
 context.save();
-context.fillStyle = 'cyan';
+context.fillStyle = 'LightSkyBlue';
 context.translate(canvas.width /2, canvas.height /2);
 context.rotate(90 / 180 * Math.PI);
 //context.fillRect(0, 0, canvas.width, canvas.height);
@@ -34,57 +34,36 @@ drawHexagon(context, 0, 0, canvas.width / 1.8);
 context.restore();
 
 const margin = 20;
-const w = (canvas.width - margin * 2) / 5;
-const h = (canvas.height - margin * 2) / 5;
+const w = (canvas.width) / 5;
+const h = (canvas.height) / 5;
 
 
-/*
-for (let i = 0; i < 5; i++){
-    r = 5 - Math.abs(j % 5);
-    
-    for (let e = 0; e < r; e++){
-        const x = r * w + margin;
-        const y = e * h + margin;
-        context.fillStyle = 'brown';
-        
-        context.save();
-        drawHexagon(context, x + w/2, y + w/2, w/2);
-        context.rect(x, y, w, h);
-        context.stroke();
-        context.restore();
-        
-    }
-    console.log(r, i, j);
-    j--;
-}
-*/
-let j = 2;
+const terranTypes = ['brown','darkGreen','gray','red','yellow','LimeGreen','beige']
+
+
+
 let r;
 let a = 0;
 let b = 0;
+const longestRow = 5;
 
 for (let i = 0; i < 19; i++){
     
     if (i - a == r) {
-        j--;
-        a = a + r;
+        a += r;
         b++;
     }
 
-    r = 5 - Math.abs(j % 5);
+    r = longestRow - Math.abs(2 - b % longestRow);
 
-    
-    //console.log(r, j);
-    const x = (i - a) * w + margin; 
-    const y = b * h + margin;
+    const x = (i - a) * w + (w * (longestRow - r) * 0.5); 
+    const y = b * h * 0.75 + margin * 3;
 
-    console.log(i,j, r, i-a, b);
-
-    context.fillStyle = 'brown';
+    context.fillStyle = terranTypes[randomRange(0,terranTypes.length)];
     
     context.save();
     drawHexagon(context, x + w/2, y + w/2, w/2);
-    context.rect(x, y, w, h);
+    //context.rect(x, y, w, h);
     context.stroke();
     context.restore();
 }
