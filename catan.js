@@ -46,15 +46,17 @@ let r;
 let a = 0;
 let b = 0;
 const longestRow = 5;
+const shortestRow = 3;
+const totalHex = 19;
 
-for (let i = 0; i < 19; i++){
+for (let i = 0; i < totalHex; i++){
     
     if (i - a == r) {
         a += r;
         b++;
     }
 
-    r = longestRow - Math.abs(2 - b % longestRow);
+    r = longestRow - Math.abs(shortestRow - 1 - b % longestRow);
 
     const x = (i - a) * w + (w * (longestRow - r) * 0.5); 
     const y = b * h * 0.75 + margin * 3;
