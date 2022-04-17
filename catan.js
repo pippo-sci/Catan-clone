@@ -1,5 +1,5 @@
 // Main Menu
-import { drawHexagon, randomRange } from "./Utils.js";
+import { drawHexagon, randomRange, rotate } from "./Utils.js";
 
 const score = document.getElementById("score");
 score.innerHTML = "0";
@@ -21,9 +21,10 @@ context.fillStyle = 'LightSkyBlue';
 context.translate(canvas.width /2, canvas.height /2);
 context.rotate(90 / 180 * Math.PI);
 //context.fillRect(0, 0, canvas.width, canvas.height);
-drawHexagon(context, 0, 0, canvas.width / 1.8);
+const forget = drawHexagon(context, 0, 0, canvas.width / 1.8);
 
 context.restore();
+
 
 
 const createBoard = () => {
@@ -40,6 +41,8 @@ const createBoard = () => {
     const longestRow = 5;
     const shortestRow = 3;
     const totalHex = 19;
+
+    const graph = {};
     
     for (let i = 0; i < totalHex; i++){
         
@@ -50,17 +53,30 @@ const createBoard = () => {
     
         r = longestRow - Math.abs(shortestRow - 1 - b % longestRow);
     
-        const x = (i - a) * w + (w * (longestRow - r) * 0.45); 
-        const y = b * h * 0.75 + margin * 3;
+        const x = (i - a) * w * 0.85 + (w * (longestRow - r) * 0.45) + w * 0.75; 
+        const y = b * h * 0.75 + margin * 3 + h/2;
     
         context.fillStyle = terranTypes[randomRange(0,terranTypes.length + 1)];
         
         context.save();
-        drawHexagon(context, x + w/2, y + w/2, w/2);
-        //context.rect(x, y, w, h);
-        context.stroke();
+        const corners = drawHexagon(context, x, y, w/2);
+        context.fill();
         context.restore();
+        
+        corners.forEach((c)=>{
+            context.save();
+            console.log(c, x, y);
+            c = rotate(c.x, c.y, 0, 0, 90);
+            context.beginPath();
+            context.arc(c.x + x, c.y + y, 6, 0, 2 * Math.PI);
+            context.stroke();
+            context.restore();
+        });
+        
+
+        graph['s'] = {posX: x ,posY: y};
     }
+    return graph;
 }
 
 // Game classes
