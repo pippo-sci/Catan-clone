@@ -26,7 +26,6 @@ const forget = drawHexagon(context, 0, 0, canvas.width / 1.8);
 context.restore();
 
 
-
 const createBoard = () => {
     
     const margin = 20;
@@ -42,7 +41,7 @@ const createBoard = () => {
     const shortestRow = 3;
     const totalHex = 19;
 
-    const graph = {};
+    const graph = [];
     
     for (let i = 0; i < totalHex; i++){
         
@@ -53,7 +52,7 @@ const createBoard = () => {
     
         r = longestRow - Math.abs(shortestRow - 1 - b % longestRow);
     
-        const x = (i - a) * w * 0.85 + (w * (longestRow - r) * 0.45) + w * 0.75; 
+        const x = (i - a) * w * 0.87 + (w * (longestRow - r) * 0.45) + w * 0.75; 
         const y = b * h * 0.75 + margin * 3 + h/2;
     
         context.fillStyle = terranTypes[randomRange(0,terranTypes.length + 1)];
@@ -65,17 +64,25 @@ const createBoard = () => {
         
         corners.forEach((c)=>{
             context.save();
-            console.log(c, x, y);
+            //console.log(c, x, y);
             c = rotate(c.x, c.y, 0, 0, 90);
             context.beginPath();
             context.arc(c.x + x, c.y + y, 6, 0, 2 * Math.PI);
             context.stroke();
             context.restore();
+            
+            /*for (let j = 0; j < graph.length; j++){
+                if() {
+                    console.log(c);
+                }
+            }*/
+            graph.push({x: c.x + x, y: c.y + y});
+
         });
         
-
-        graph['s'] = {posX: x ,posY: y};
+        
     }
+    console.log(graph);
     return graph;
 }
 
@@ -124,7 +131,7 @@ class Player {
     }
 
     buy(item) {
-        if(item.price in this.hand.resources) {
+        if(this.hand.resources.includes(item.price)) {
             this.hand[item.type] = item;
         } else {
             alert("Not enough resources");
