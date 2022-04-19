@@ -8,17 +8,19 @@
 
 </head>
 <body>
-    <div id="bar" style="text-align:center;height:60px;background-color:black;color:white;">
+    <div id="bar" style="text-align:center;padding:10px;height:30px;background-color:black;color:white;">
         CATAN
         <div></div>
     </div>
-    <div style="justify-content:center;">
+    <div style="border:5px;display:flex;justify-content:center;">
         <canvas id="canvas" ></canvas>
     </div>
+    <div style="text-align:center;padding:10px;">
+        <button id="newGame">
+            New game
+        </button>
+    </div>
     
-    <button id="newGame">
-        New game
-    </button>
     <div id="hand" style="text-align:center;height:80px;background-color:rgb(146, 4, 4);color:white;">
         Current Player Score:<div id="score"></div>
     </div>

@@ -1,5 +1,5 @@
 // Main Menu
-import { drawHexagon, randomRange, rotate } from "./Utils.js";
+import { drawHexagon, randomRange, rotate, polyInNotList } from "./Utils.js";
 
 const score = document.getElementById("score");
 score.innerHTML = "0";
@@ -20,8 +20,7 @@ context.save();
 context.fillStyle = 'LightSkyBlue';
 context.translate(canvas.width /2, canvas.height /2);
 context.rotate(90 / 180 * Math.PI);
-//context.fillRect(0, 0, canvas.width, canvas.height);
-const forget = drawHexagon(context, 0, 0, canvas.width / 1.8);
+const forget = drawHexagon(context, 0, 0, canvas.width / 2);
 
 context.restore();
 
@@ -41,7 +40,8 @@ const createBoard = () => {
     const shortestRow = 3;
     const totalHex = 19;
 
-    const graph = [];
+    const graph = [[],[]]; 
+    const types = ["settleSlot", "roadSlot"];
     
     for (let i = 0; i < totalHex; i++){
         
@@ -52,58 +52,64 @@ const createBoard = () => {
     
         r = longestRow - Math.abs(shortestRow - 1 - b % longestRow);
     
-        const x = (i - a) * w * 0.87 + (w * (longestRow - r) * 0.45) + w * 0.75; 
+        const x = (i - a) * w * 0.87 + (w * (longestRow - r) * 0.43) + w * 0.75; 
         const y = b * h * 0.75 + margin * 3 + h/2;
     
         context.fillStyle = terranTypes[randomRange(0,terranTypes.length + 1)];
         
         context.save();
-        const corners = drawHexagon(context, x, y, w/2);
+        const borders = drawHexagon(context, x, y, w/2);
         context.restore();
         //context.fill();
         
-        corners[0].forEach((c)=>{
-            context.save();
-            //console.log(c, x, y);
-            c = rotate(c.x, c.y, 0, 0, 90);
-            const circle = new Path2D();
-            circle.arc(c.x + x, c.y + y, 6, 0, 2 * Math.PI);
-            //context.stroke(circle);
-            
-            if (graph.length < 1){
-                graph.push({x: c.x + x, y: c.y + y, circle: circle});
-            } 
-            
-            let flag = true;
-            for (let j = 0; j < graph.length; j++){
-                if(context.isPointInPath(graph[j].circle, c.x + x, c.y + y )) {
-                    console.log(c);
-                    flag = false;
-                }
-            }
-            if (flag){
-                graph.push({x: c.x + x, y: c.y + y, circle: circle});
-            }
-            context.restore();
+        borders.forEach((corner, index) => {
 
+            let neighIndex = [];
+
+            corner.forEach((c) => {
+                context.save();
+                c = rotate(c.x, c.y, 0, 0, 90);
+                const circle = new Path2D();
+                const centreX = c.x + x;
+                const centreY = c.y + y;
+                circle.arc(centreX, centreY, 6, 0, 2 * Math.PI);
+                
+                if (graph[index].length < 1){
+                    graph[index].push({x: centreX, y: centreY, shape: circle, type: types[index], neigh:[]});
+                    neighIndex.push(graph[index].length - 1);
+                } else {
+                    const match = polyInNotList(context, graph[index], centreX,centreY);
+                    if (match[0]) {
+                        graph[index].push({x: centreX, y: centreY, shape: circle, type: types[index], neigh:[]}); 
+                        neighIndex.push(graph[index].length - 1);
+                    } else {
+                        //console.log(match[1]);
+                        neighIndex = neighIndex.concat(match[1]);
+                    }
+                }
+
+                context.restore();
+                
+            });
+                        
+            console.log(neighIndex);
+            graph[index].push({x: x, y: y, type: "hexagon", resource: context.fillStyle, neigh: neighIndex})
         }); 
-        
-        corners[1].forEach((c)=>{
-            context.save();
-            //console.log(c, x, y);
-            c = rotate(c.x, c.y, 0, 0, 90);
-            const circle = new Path2D();
-            circle.arc(c.x + x, c.y + y, 6, 0, 2 * Math.PI);
-            context.stroke(circle);
-        })
     }
+    console.log(graph);
 
     //additional loop to draw cicles on top of hexagones
-    for (let j = 0; j < graph.length;j++){
-        context.stroke(graph[j].circle);
+    for (let j = 0; j < graph[0].length;j++){
+        if (graph[0][j].type == "settleSlot"){
+            context.stroke(graph[0][j].shape);
+        }
+        
+        for (let k = 0; k < graph[0][j].neigh.length; k++){
+            graph[0][k].neigh.push(j);
+        };
+        
     }
 
-    console.log(graph);
     return graph;
 }
 

@@ -47,3 +47,18 @@ export const rotate = (x, y, xo, yo, theta) => {
     const yr = Math.sin(theta) * (x-xo) + Math.cos(theta) * (y-yo) + yo;
     return {x: xr, y: yr};
 }
+
+export const polyInNotList = (context, list, x, y) => {
+    
+    let flag = true;
+    const matchedIndex = [];
+    for (let j = 0; j < list.length; j++){
+        if(list[j].type == "hexagon") {
+            continue;
+        } else if(context.isPointInPath(list[j]['shape'], x, y)) {
+            flag = false;
+            matchedIndex.push(j);
+        }
+    }
+    return [flag, matchedIndex];
+}
