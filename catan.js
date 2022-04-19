@@ -59,29 +59,50 @@ const createBoard = () => {
         
         context.save();
         const corners = drawHexagon(context, x, y, w/2);
-        context.fill();
         context.restore();
+        //context.fill();
         
-        corners.forEach((c)=>{
+        corners[0].forEach((c)=>{
             context.save();
             //console.log(c, x, y);
             c = rotate(c.x, c.y, 0, 0, 90);
-            context.beginPath();
-            context.arc(c.x + x, c.y + y, 6, 0, 2 * Math.PI);
-            context.stroke();
-            context.restore();
+            const circle = new Path2D();
+            circle.arc(c.x + x, c.y + y, 6, 0, 2 * Math.PI);
+            //context.stroke(circle);
             
-            /*for (let j = 0; j < graph.length; j++){
-                if() {
+            if (graph.length < 1){
+                graph.push({x: c.x + x, y: c.y + y, circle: circle});
+            } 
+            
+            let flag = true;
+            for (let j = 0; j < graph.length; j++){
+                if(context.isPointInPath(graph[j].circle, c.x + x, c.y + y )) {
                     console.log(c);
+                    flag = false;
                 }
-            }*/
-            graph.push({x: c.x + x, y: c.y + y});
+            }
+            if (flag){
+                graph.push({x: c.x + x, y: c.y + y, circle: circle});
+            }
+            context.restore();
 
-        });
+        }); 
         
-        
+        corners[1].forEach((c)=>{
+            context.save();
+            //console.log(c, x, y);
+            c = rotate(c.x, c.y, 0, 0, 90);
+            const circle = new Path2D();
+            circle.arc(c.x + x, c.y + y, 6, 0, 2 * Math.PI);
+            context.stroke(circle);
+        })
     }
+
+    //additional loop to draw cicles on top of hexagones
+    for (let j = 0; j < graph.length;j++){
+        context.stroke(graph[j].circle);
+    }
+
     console.log(graph);
     return graph;
 }

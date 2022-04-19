@@ -6,24 +6,38 @@ export const randomRange = (min, max) => {
 export const drawHexagon = (ctx, x, y, r) => {
 
     const a = 2 * Math.PI / 6;
-    const coords = [];
+    const corners = [];
+    const edgeCentre = [];
     ctx.save()
     ctx.translate(x, y);
     ctx.rotate(90 / 180 * Math.PI);
     ctx.beginPath();
-    let tx, ty;
+    let tx, ty, cx, cy, midx, midy;
+
     for (let i= 0; i < 6; i++){
-        tx = r * Math.cos(a * i);
-        ty = r * Math.sin(a * i);
+        cx = r * Math.cos(a * i);
+        cy = r * Math.sin(a * i);
+        if (i > 0){
+            midx = tx + (cx - tx) * 0.5;
+            midy = ty + (cy - ty) * 0.5;
+            edgeCentre.push({x: midx, y:midy});
+        };
+        tx = cx; 
+        ty = cy;
         ctx.lineTo(tx, ty);
-        coords.push({x: tx, y: ty});
+        corners.push({x: tx, y: ty});
     }
+    
+    midx = tx + (r - tx) * 0.5;
+    midy = ty + (0 - ty) * 0.5;
+    ctx.lineTo(r, 0);
+    edgeCentre.push({x: midx, y:midy});
     
     ctx.fill();
     ctx.stroke();
 
     ctx.restore();
-    return coords;
+    return [corners, edgeCentre];
 }
 
 
