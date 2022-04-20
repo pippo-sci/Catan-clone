@@ -1,5 +1,5 @@
 // Main Menu
-import { drawHexagon, randomRange, rotate, polyInNotList } from "./Utils.js";
+import { drawHexagon, randomRange, rotate, polyInNotList, mod } from "./Utils.js";
 
 const score = document.getElementById("score");
 score.innerHTML = "0";
@@ -102,11 +102,21 @@ const createBoard = () => {
     for (let j = 0; j < graph[0].length;j++){
         if (graph[0][j].type == "settleSlot"){
             context.stroke(graph[0][j].shape);
+        } else {
+            
+            graph[0][j].neigh.forEach((k, index) =>{
+                graph[0][k].neigh.push(j); //add hexagon
+                const prev = graph[0][j].neigh[mod(index - 1, 6)];
+                const next = graph[0][j].neigh[mod(index + 1, 6)];
+                if (!graph[0][k].neigh.includes(prev)){
+                    graph[0][k].neigh.push(prev); //add prev neigh
+                }
+                if (!graph[0][k].neigh.includes(next))
+                graph[0][k].neigh.push(next); //add next neigh
+                
+            });
         }
         
-        for (let k = 0; k < graph[0][j].neigh.length; k++){
-            graph[0][k].neigh.push(j);
-        };
         
     }
 

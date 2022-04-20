@@ -62,3 +62,7 @@ export const polyInNotList = (context, list, x, y) => {
     }
     return [flag, matchedIndex];
 }
+
+export const mod = (n, m) => {
+    return ((n % m) + m) % m;
+  }
