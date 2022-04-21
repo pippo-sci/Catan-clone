@@ -5,9 +5,12 @@ const score = document.getElementById("score");
 score.innerHTML = "0";
 const newGame = document.getElementById("newGame");
 
+let game;
+
 newGame.addEventListener("click", () => {
-    const game = new Game();
+    game = new Game();
 })
+
 
 const canvas = document.getElementsByTagName("canvas")[0];
 
@@ -21,6 +24,24 @@ context.fillStyle = 'LightSkyBlue';
 context.translate(canvas.width /2, canvas.height /2);
 context.rotate(90 / 180 * Math.PI);
 const forget = drawHexagon(context, 0, 0, canvas.width / 2);
+
+canvas.addEventListener("click", event => {
+    if (typeof game !== 'undefined'){
+        for(let i of game.board[0] ){
+            if(i.type != "hexagon"){
+                if (context.isPointInPath(i.shape, event.offsetX, event.offsetY)){
+                    context.fillStyle = 'red';
+                    context.fill(i.shape);
+                    console.log("here");
+                } else {
+                    context.fillStyle = 'white';//'rgba(255, 255, 255, 0.01)';
+                    context.fill(i.shape);
+                }
+            }
+
+        }
+    }
+});
 
 context.restore();
 
@@ -122,6 +143,7 @@ const createBoard = () => {
 
     return graph;
 }
+
 
 // Game classes
 
