@@ -15,14 +15,28 @@
     <div style="border:5px;display:flex;justify-content:center;">
         <canvas id="canvas" ></canvas>
     </div>
-    <div style="text-align:center;padding:10px;">
+    <div id="button" style="text-align:center;padding:10px;">
         <button id="newGame">
             New game
         </button>
+        <button id="rollDice" style="display:none;"> Roll dices</button>
     </div>
     
-    <div id="hand" style="text-align:center;height:80px;background-color:rgb(146, 4, 4);color:white;">
-        Current Player Score:<div id="score"></div>
+    <div id="hand" style="display:flex;justify-content:center;height:120px;background-color:rgb(146, 4, 4);color:white;">
+        <div style="text-align:left;padding:10px;margin:5px;width:25%;">
+            Current Player:
+            <div id="name" style="display:block;padding:5px">Name: <div style="display:inline;"></div></div>
+            <div id="score" style="padding:5px;">Score: <div style="display:inline;"></div></div>
+            <div id="hand" style="padding:5px;">Hand: <div style="display:inline;"></div></div>
+        </div>
+        
+        <div  style="text-align:left;padding:20px;margin:10px;width:25%;">
+            Dices
+            <div id="dices">
+
+            </div>
+            
+        </div>
     </div>
 
     <script type="module" src="./catan.js"></script>

@@ -1,18 +1,18 @@
 // Main Menu
 import { drawHexagon, randomRange, rotate, polyInNotList, mod } from "./Utils.js";
 
-const score = document.getElementById("score");
+const name = document.getElementById("name").lastChild;
+const score = document.getElementById("score").lastChild;
+const hand = document.getElementById("hand").lastChild;
+const dices = document.getElementById("dices");
+
+name.innerHTML = "No player";
 score.innerHTML = "0";
+hand.innerHTML = ".";
+
 const newGame = document.getElementById("newGame");
-
-let game;
-
-newGame.addEventListener("click", () => {
-    game = new Game();
-})
-
-
 const canvas = document.getElementsByTagName("canvas")[0];
+const rollDice = document.getElementById("rollDice");
 
 canvas.width = 600;
 canvas.height = 600;
@@ -20,10 +20,32 @@ canvas.height = 600;
 const context = canvas.getContext("2d");
 
 context.save();
+context.strokeStyle = 'gray';
 context.fillStyle = 'LightSkyBlue';
 context.translate(canvas.width /2, canvas.height /2);
 context.rotate(90 / 180 * Math.PI);
 const forget = drawHexagon(context, 0, 0, canvas.width / 2);
+
+let game;
+
+newGame.addEventListener("click", () => {
+    const playerList = [];
+    for (let i = 0; i < 4;i++){
+        playerList.push(new Player(`Player ${i + 1}`));
+    }
+    
+    game = new Game(playerList);
+    rollDice.style.display = "inline";
+
+    //game.start();
+
+})
+
+rollDice.addEventListener("click", () => {
+    const dice1 = randomRange(1,7);
+    const dice2 = randomRange(1,7);
+    dices.innerHTML = `dices: ${dice1} + ${dice2} =  ${dice1+dice2}`;
+})
 
 canvas.addEventListener("click", event => {
     if (typeof game !== 'undefined'){
@@ -32,10 +54,10 @@ canvas.addEventListener("click", event => {
                 if (context.isPointInPath(i.shape, event.offsetX, event.offsetY)){
                     context.fillStyle = 'red';
                     context.fill(i.shape);
-                    console.log("here");
                 } else {
                     context.fillStyle = 'white';//'rgba(255, 255, 255, 0.01)';
                     context.fill(i.shape);
+                    context.stroke(i.shape);
                 }
             }
 
@@ -113,7 +135,7 @@ const createBoard = () => {
                 
             });
                         
-            console.log(neighIndex);
+            //console.log(neighIndex);
             graph[index].push({x: x, y: y, type: "hexagon", resource: context.fillStyle, neigh: neighIndex})
         }); 
     }
@@ -122,7 +144,9 @@ const createBoard = () => {
     //additional loop to draw cicles on top of hexagones
     for (let j = 0; j < graph[0].length;j++){
         if (graph[0][j].type == "settleSlot"){
+            context.strokeStyle = 'gray';
             context.stroke(graph[0][j].shape);
+            
         } else {
             
             graph[0][j].neigh.forEach((k, index) =>{
@@ -138,7 +162,6 @@ const createBoard = () => {
             });
         }
         
-        
     }
 
     return graph;
@@ -148,23 +171,28 @@ const createBoard = () => {
 // Game classes
 
 class Game {
-    constructor (playerList) {
-        this.playersList = playerList;
+
+    constructor (playersList) {
+        this.playersList = playersList;
         this.board = createBoard();
     }
 
     start() {
 
         let i = 0;
-
+        let currentPlayer;
         while (true) {
-            const currentPlayer = this.playerList[i % this.playerList.length];
+            currentPlayer = this.playersList[i % this.playersList.length];
+            name.innerHTML = currentPlayer.name;
+            score.innerHTML = currentPlayer.score;
+            hand.innerHTML = currentPlayer.hand;
             currentPlayer.turn();
             i++;
             if (currentPlayer.score >= 10){
                 break;
             }
         }
+        alert(`player ${currentPlayer.name} won`);
 
     }
 }
@@ -181,13 +209,13 @@ class Player {
                     knights: []};
     }
 
-    turn(){
-        this.rollDices();
+    turn(game){
+        //this.rollDices();
+        alert("pick a card");
+        alert("roll dice");
+
     }
 
-    rollDices() {
-        return randomRange(1,7);
-    }
 
     buy(item) {
         if(this.hand.resources.includes(item.price)) {
