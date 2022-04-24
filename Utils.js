@@ -8,8 +8,8 @@ export const drawHexagon = (ctx, x, y, r) => {
     const a = 2 * Math.PI / 6;
     const corners = [];
     const edgeCentre = [];
-    ctx.strokeStyle = 'gray';
     ctx.save()
+    ctx.strokeStyle = 'gray';
     ctx.translate(x, y);
     ctx.rotate(90 / 180 * Math.PI);
     ctx.beginPath();

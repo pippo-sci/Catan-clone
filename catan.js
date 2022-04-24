@@ -28,7 +28,6 @@ context.restore();
 
 let game;
 let currentSlot;
-let dicesValue;
 
 canvas.addEventListener("click", event => {
     if (typeof game !== 'undefined'){
@@ -40,9 +39,19 @@ canvas.addEventListener("click", event => {
                     context.fillStyle = 'red';
                     context.fill(i.shape);
                     currentSlot = index;
-                    hand.innerHTML = `${currentSlot}`;
+                    let neighList = [];
+                    for (let n of i.neigh) {
+                        if (game.board[0][n].type != "hexagon"){
+                            neighList.push(n);
+                            context.save();
+                            context.fillStyle = "green";
+                            context.fill(game.board[0][n].shape)
+                            context.restore();
+                        }
+                    }
+                    hand.innerHTML = `${currentSlot} - ${neighList}`;
                 } else {
-                    context.fillStyle = 'white';//'rgba(255, 255, 255, 0.01)';
+                    context.fillStyle = typeof i['settleColor'] != 'undefined'? i.settleColor: "white";
                     context.fill(i.shape);
                     context.stroke(i.shape);
                 }
@@ -53,9 +62,6 @@ canvas.addEventListener("click", event => {
     }
 });
 
-
-//let dicesRolled = false;
-//let turn = 0;
 
 rollDice.addEventListener("click", () => {
     if(!game.dicesRolled){
@@ -81,31 +87,20 @@ endTurn.addEventListener("click", () => {
 })
 
 newGame.addEventListener("click", () => {
+
+    const colors = ["darkBlue", "orange", "darkRed", "rgb(220,220,255)"]
     const playerList = [];
     for (let i = 0; i < 4;i++){
-        playerList.push(new Player(`Player ${i + 1}`));
+        playerList.push(new Player(`Player ${i + 1}`, colors[i]));
     }
     
     game = new Game(playerList);
+    game.randomInit();
     rollDice.style.display = "inline";
     endTurn.style.display = "inline";
     
     game.nextTurn();
 })
-/*
-if (typeof game != 'undefined'){
-    let currentPlayer;
-        
-    currentPlayer = game.playersList[turn % game.playersList.length];
-    name.innerHTML = currentPlayer.name;
-    score.innerHTML = currentPlayer.score;
-    hand.innerHTML = currentPlayer.hand;
-    //currentPlayer.turn();
-    if (currentPlayer.score >= 10){
-        alert(`${currentPlayer.name} won`);
-    }
-}
-*/
 
 
 const createBoard = () => {
@@ -124,7 +119,7 @@ const createBoard = () => {
     const totalHex = 19;
 
     const graph = [[],[]]; 
-    const types = ["settleSlot", "roadSlot"];
+    const types = ["settleSlot", "roadSlot", "hexagon"];
     
     for (let i = 0; i < totalHex; i++){
         
@@ -146,6 +141,8 @@ const createBoard = () => {
        
         
         borders.forEach((corner, index) => {
+
+
 
             let neighIndex = [];
 
@@ -207,15 +204,15 @@ const createBoard = () => {
         }
         
     }
-    
     return graph;
 }
 
 
 // Game classes
 
-class Game {
 
+class Game {
+    
     constructor (playersList) {
         this.playersList = playersList;
         this.board = createBoard();
@@ -223,6 +220,42 @@ class Game {
         this.dicesValue;
         this.dicesRolled = false;
 
+    }
+
+    isValidLocation(location) {
+        if (location.type != 'hexagon'){
+            for (let n of location.neigh){
+                console.log(typeof this.board[0][n]['settleColor'] != 'undefined');
+                if (this.board[0][n].type != 'hexagon' && typeof this.board[0][n]['settleColor'] != 'undefined'){
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    randomInit(){
+
+        for(let player of this.playersList){
+            let tries = true;
+            while(tries){
+                const randomIndex = randomRange(0, this.board[0].length);
+
+                if (this.isValidLocation(this.board[0][randomIndex])){
+                    this.board[0][randomIndex]['settleColor'] = player.color;
+                    context.save();
+                    context.fillStyle = player.color;
+                    context.strokeStyle = 'gray';
+                    context.fill(this.board[0][randomIndex].shape);
+                    context.stroke(this.board[0][randomIndex].shape);
+                    context.restore();
+                    tries = false;
+                };
+            }
+
+
+        }
     }
 
     nextTurn() {
@@ -245,7 +278,8 @@ class Game {
 
 
 class Player {
-    constructor (name) {
+    constructor (name, color) {
+        this.color = color;
         this.score = 0;
         this.name = name;
         this.hand = {resources: [],
