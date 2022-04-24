@@ -8,15 +8,14 @@ const dices = document.getElementById("dices");
 
 name.innerHTML = "No player";
 score.innerHTML = "0";
-hand.innerHTML = ".";
+hand.innerHTML = "0";
 
 const newGame = document.getElementById("newGame");
-const canvas = document.getElementsByTagName("canvas")[0];
 const rollDice = document.getElementById("rollDice");
-
+const endTurn = document.getElementById("endTurn");
+const canvas = document.getElementsByTagName("canvas")[0];
 canvas.width = 600;
 canvas.height = 600;
-
 const context = canvas.getContext("2d");
 
 context.save();
@@ -25,8 +24,61 @@ context.fillStyle = 'LightSkyBlue';
 context.translate(canvas.width /2, canvas.height /2);
 context.rotate(90 / 180 * Math.PI);
 const forget = drawHexagon(context, 0, 0, canvas.width / 2);
+context.restore();
 
 let game;
+let currentSlot;
+let dicesValue;
+
+canvas.addEventListener("click", event => {
+    if (typeof game !== 'undefined'){
+        game.board[0].forEach((i, index) => {
+            if(i.type != "hexagon"){
+                context.save();
+                context.strokeStyle = 'gray';
+                if (context.isPointInPath(i.shape, event.offsetX, event.offsetY)){
+                    context.fillStyle = 'red';
+                    context.fill(i.shape);
+                    currentSlot = index;
+                    hand.innerHTML = `${currentSlot}`;
+                } else {
+                    context.fillStyle = 'white';//'rgba(255, 255, 255, 0.01)';
+                    context.fill(i.shape);
+                    context.stroke(i.shape);
+                }
+                context.restore();
+            }
+            
+        })
+    }
+});
+
+
+//let dicesRolled = false;
+//let turn = 0;
+
+rollDice.addEventListener("click", () => {
+    if(!game.dicesRolled){
+        const dice1 = randomRange(1,7);
+        const dice2 = randomRange(1,7);
+        dices.innerHTML = ` ${dice1} + ${dice2} =  ${dice1+dice2}`;
+        game.dicesValue = dice1+dice2;
+        game.dicesRolled = true;
+    } else {
+        alert("Dices already rolled");
+    }
+})
+
+endTurn.addEventListener("click", () => {
+    if (game.dicesRolled){
+        game.turn += 1;
+        game.dicesRolled = false;
+        game.nextTurn();
+    } else {
+        alert("roll dices first");
+    }
+    
+})
 
 newGame.addEventListener("click", () => {
     const playerList = [];
@@ -36,36 +88,24 @@ newGame.addEventListener("click", () => {
     
     game = new Game(playerList);
     rollDice.style.display = "inline";
-
-    //game.start();
-
+    endTurn.style.display = "inline";
+    
+    game.nextTurn();
 })
-
-rollDice.addEventListener("click", () => {
-    const dice1 = randomRange(1,7);
-    const dice2 = randomRange(1,7);
-    dices.innerHTML = `dices: ${dice1} + ${dice2} =  ${dice1+dice2}`;
-})
-
-canvas.addEventListener("click", event => {
-    if (typeof game !== 'undefined'){
-        for(let i of game.board[0] ){
-            if(i.type != "hexagon"){
-                if (context.isPointInPath(i.shape, event.offsetX, event.offsetY)){
-                    context.fillStyle = 'red';
-                    context.fill(i.shape);
-                } else {
-                    context.fillStyle = 'white';//'rgba(255, 255, 255, 0.01)';
-                    context.fill(i.shape);
-                    context.stroke(i.shape);
-                }
-            }
-
-        }
+/*
+if (typeof game != 'undefined'){
+    let currentPlayer;
+        
+    currentPlayer = game.playersList[turn % game.playersList.length];
+    name.innerHTML = currentPlayer.name;
+    score.innerHTML = currentPlayer.score;
+    hand.innerHTML = currentPlayer.hand;
+    //currentPlayer.turn();
+    if (currentPlayer.score >= 10){
+        alert(`${currentPlayer.name} won`);
     }
-});
-
-context.restore();
+}
+*/
 
 
 const createBoard = () => {
@@ -74,7 +114,7 @@ const createBoard = () => {
     const w = (canvas.width) / 5;
     const h = (canvas.height) / 5;
     
-    const terranTypes = ['brown','darkGreen','gray','red','yellow','LimeGreen','beige']
+    const terranTypes = ['brown','darkGreen','lightBlue','red','yellow','LimeGreen','beige']
     
     let r;
     let a = 0;
@@ -103,7 +143,7 @@ const createBoard = () => {
         context.save();
         const borders = drawHexagon(context, x, y, w/2);
         context.restore();
-        //context.fill();
+       
         
         borders.forEach((corner, index) => {
 
@@ -144,8 +184,12 @@ const createBoard = () => {
     //additional loop to draw cicles on top of hexagones
     for (let j = 0; j < graph[0].length;j++){
         if (graph[0][j].type == "settleSlot"){
+            context.save()
+            context.fillStyle = 'white';
             context.strokeStyle = 'gray';
+            context.fill(graph[0][j].shape);
             context.stroke(graph[0][j].shape);
+            context.restore();
             
         } else {
             
@@ -163,7 +207,7 @@ const createBoard = () => {
         }
         
     }
-
+    
     return graph;
 }
 
@@ -175,25 +219,26 @@ class Game {
     constructor (playersList) {
         this.playersList = playersList;
         this.board = createBoard();
+        this.turn = 0;
+        this.dicesValue;
+        this.dicesRolled = false;
+
     }
 
-    start() {
+    nextTurn() {
 
-        let i = 0;
         let currentPlayer;
-        while (true) {
-            currentPlayer = this.playersList[i % this.playersList.length];
-            name.innerHTML = currentPlayer.name;
-            score.innerHTML = currentPlayer.score;
-            hand.innerHTML = currentPlayer.hand;
-            currentPlayer.turn();
-            i++;
-            if (currentPlayer.score >= 10){
-                break;
-            }
-        }
-        alert(`player ${currentPlayer.name} won`);
+        
+        currentPlayer = this.playersList[this.turn % this.playersList.length];
 
+        name.innerHTML = currentPlayer.name;
+        score.innerHTML = currentPlayer.score;
+        hand.innerHTML = currentPlayer.hand;
+        //currentPlayer.turn();
+        if (currentPlayer.score >= 10){
+            alert(`${currentPlayer.name} won`);
+        }
+        
     }
 }
 
@@ -210,9 +255,10 @@ class Player {
     }
 
     turn(game){
-        //this.rollDices();
-        alert("pick a card");
-        alert("roll dice");
+        
+        //alert("pick a card");
+        //alert("roll dice");
+        this.score += 1;
 
     }
 
