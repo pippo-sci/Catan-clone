@@ -41,6 +41,27 @@ export const drawHexagon = (ctx, x, y, r) => {
     return [corners, edgeCentre];
 }
 
+/**
+ * DEPRICATED
+ * @param {*} x 
+ * @param {*} y 
+ * @param {*} w 
+ * @param {*} h 
+ * @param {*} theta 
+ * @returns 
+ */
+export const rotatedRect = (x, y, w, h, theta) => {
+    let r = new Path2D();
+    let r2 = new Path2D();
+    r2.rect(x, y, w, h);
+    let m = new DOMMatrix();
+    theta *= Math.PI /180;
+    m.a  = Math.cos(theta); m.b = -Math.sin(theta);
+    m.c  = Math.sin(theta); m.b = Math.cos(theta);
+    r.addPath(r2, m);
+    return r;
+}
+
 
 export const rotate = (x, y, xo, yo, theta) => {
     theta *= Math.PI /180;
