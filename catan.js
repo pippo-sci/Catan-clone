@@ -1,5 +1,5 @@
 // Main Menu
-import { drawHexagon, randomRange, rotate, polyInNotList, mod } from "./Utils.js";
+import { drawHexagon, randomRange, rotate, polyNotInList, mod } from "./Utils.js";
 
 const name = document.getElementById("name").lastChild;
 const score = document.getElementById("score").lastChild;
@@ -31,32 +31,27 @@ let currentSlot;
 
 canvas.addEventListener("click", event => {
     if (typeof game !== 'undefined'){
-        game.board[0].forEach((i, index) => {
-            if(i.type != "hexagon"){
-                context.save();
-                context.strokeStyle = 'gray';
-                if (context.isPointInPath(i.shape, event.offsetX, event.offsetY)){
-                    context.fillStyle = 'red';
-                    context.fill(i.shape);
-                    currentSlot = index;
-                    let neighList = [];
-                    for (let n of i.neigh) {
-                        if (game.board[0][n].type != "hexagon"){
-                            neighList.push(n);
-                            context.save();
-                            context.fillStyle = "green";
-                            context.fill(game.board[0][n].shape)
-                            context.restore();
-                        }
-                    }
-                    hand.innerHTML = `${currentSlot} - ${neighList}`;
-                } else {
-                    context.fillStyle = typeof i['settleColor'] != 'undefined'? i.settleColor: "white";
-                    context.fill(i.shape);
-                    context.stroke(i.shape);
+        game.board['settleSlot'].forEach((settle, index) => {
+            context.save();
+            context.strokeStyle = 'gray';
+            if (context.isPointInPath(settle.shape, event.offsetX, event.offsetY)){
+                context.fillStyle = 'red';
+                context.fill(settle.shape);
+                currentSlot = index;
+                hand.innerHTML = `${currentSlot} - ${settle.neigh.settleSlot}`;
+                
+                for (let n of settle.neigh.settleSlot) {
+                    context.save();
+                    context.fillStyle = "green";
+                    context.fill(game.board['settleSlot'][n].shape)
+                    context.restore();
                 }
-                context.restore();
+            } else {
+                context.fillStyle = typeof settle['settleColor'] != 'undefined'? settle.settleColor: "white";
+                context.fill(settle.shape);
+                context.stroke(settle.shape);
             }
+            context.restore();
             
         })
     }
@@ -118,7 +113,11 @@ const createBoard = () => {
     const shortestRow = 3;
     const totalHex = 19;
 
-    const graph = [[],[]]; 
+    const graph = {
+        hexagon: [],
+        settleSlot: [],
+        roadSlot: []
+    }; 
     const types = ["settleSlot", "roadSlot", "hexagon"];
     
     for (let i = 0; i < totalHex; i++){
@@ -139,11 +138,11 @@ const createBoard = () => {
         const borders = drawHexagon(context, x, y, w/2);
         context.restore();
        
+        graph['hexagon'].push({x: x, y: y, resource: context.fillStyle, neigh: {settleSlot: [], roadSlot: []}});           
         
         borders.forEach((corner, index) => {
-
-
-
+            
+            let levelType = types[index]; // settle or road
             let neighIndex = [];
 
             corner.forEach((c) => {
@@ -154,14 +153,16 @@ const createBoard = () => {
                 const centreY = c.y + y;
                 circle.arc(centreX, centreY, 6, 0, 2 * Math.PI);
                 
-                if (graph[index].length < 1){
-                    graph[index].push({x: centreX, y: centreY, shape: circle, type: types[index], neigh:[]});
-                    neighIndex.push(graph[index].length - 1);
+                if (graph[levelType].length < 1){
+                    const slot = new Slot(centreX, centreY, circle, levelType);
+                    graph[levelType].push(slot);
+                    neighIndex.push(graph[levelType].length - 1);
                 } else {
-                    const match = polyInNotList(context, graph[index], centreX,centreY);
+                    const match = polyNotInList(context, graph[levelType], centreX, centreY);
                     if (match[0]) {
-                        graph[index].push({x: centreX, y: centreY, shape: circle, type: types[index], neigh:[]}); 
-                        neighIndex.push(graph[index].length - 1);
+                        const slot = new Slot(centreX, centreY, circle, levelType);
+                        graph[levelType].push(slot); 
+                        neighIndex.push(graph[levelType].length - 1);
                     } else {
                         //console.log(match[1]);
                         neighIndex = neighIndex.concat(match[1]);
@@ -169,40 +170,39 @@ const createBoard = () => {
                 }
 
                 context.restore();
-                
+      
             });
-                        
-            //console.log(neighIndex);
-            graph[index].push({x: x, y: y, type: "hexagon", resource: context.fillStyle, neigh: neighIndex})
-        }); 
+            graph.hexagon[i].neigh[levelType] = neighIndex;
+
+            
+        });
+
     }
     console.log(graph);
 
     //additional loop to draw cicles on top of hexagones
-    for (let j = 0; j < graph[0].length;j++){
-        if (graph[0][j].type == "settleSlot"){
-            context.save()
-            context.fillStyle = 'white';
-            context.strokeStyle = 'gray';
-            context.fill(graph[0][j].shape);
-            context.stroke(graph[0][j].shape);
-            context.restore();
-            
-        } else {
-            
-            graph[0][j].neigh.forEach((k, index) =>{
-                graph[0][k].neigh.push(j); //add hexagon
-                const prev = graph[0][j].neigh[mod(index - 1, 6)];
-                const next = graph[0][j].neigh[mod(index + 1, 6)];
-                if (!graph[0][k].neigh.includes(prev)){
-                    graph[0][k].neigh.push(prev); //add prev neigh
-                }
-                if (!graph[0][k].neigh.includes(next))
-                graph[0][k].neigh.push(next); //add next neigh
-                
-            });
-        }
+    for (let j = 0; j < graph.settleSlot.length;j++){
+        context.save()
+        context.fillStyle = 'white';
+        context.strokeStyle = 'gray';
+        context.fill(graph.settleSlot[j].shape);
+        context.stroke(graph.settleSlot[j].shape);
+        context.restore();
         
+    }
+    for (let j = 0; j < graph.hexagon.length;j++){
+        graph.hexagon[j].neigh.settleSlot.forEach((k, index) =>{
+            graph.settleSlot[k].neigh['hexagon'].push(j); //add hexagon
+            const prev = graph['hexagon'][j].neigh.settleSlot[mod(index - 1, 6)];
+            const next = graph['hexagon'][j].neigh.settleSlot[mod(index + 1, 6)];
+            if (!graph['settleSlot'][k].neigh.settleSlot.includes(prev)){
+                graph['settleSlot'][k].neigh.settleSlot.push(prev); //add prev neigh
+            }
+            if (!graph['settleSlot'][k].neigh.settleSlot.includes(next)){
+                graph['settleSlot'][k].neigh.settleSlot.push(next); //add next neigh
+            }
+            
+        });
     }
     return graph;
 }
@@ -223,16 +223,13 @@ class Game {
     }
 
     isValidLocation(location) {
-        if (location.type != 'hexagon'){
-            for (let n of location.neigh){
-                console.log(typeof this.board[0][n]['settleColor'] != 'undefined');
-                if (this.board[0][n].type != 'hexagon' && typeof this.board[0][n]['settleColor'] != 'undefined'){
-                    return false;
-                }
+        for (let n of location.neigh.settleSlot){
+            //console.log(typeof this.board[0][n]['settleColor'] != 'undefined');
+            if (typeof this.board['settleSlot'][n]['settleColor'] != 'undefined'){
+                return false;
             }
-            return true;
         }
-        return false;
+        return true;
     }
 
     randomInit(){
@@ -240,15 +237,15 @@ class Game {
         for(let player of this.playersList){
             let tries = true;
             while(tries){
-                const randomIndex = randomRange(0, this.board[0].length);
+                const randomIndex = randomRange(0, this.board['settleSlot'].length);
 
-                if (this.isValidLocation(this.board[0][randomIndex])){
-                    this.board[0][randomIndex]['settleColor'] = player.color;
+                if (this.isValidLocation(this.board['settleSlot'][randomIndex])){
+                    this.board['settleSlot'][randomIndex]['settleColor'] = player.color;
                     context.save();
                     context.fillStyle = player.color;
                     context.strokeStyle = 'gray';
-                    context.fill(this.board[0][randomIndex].shape);
-                    context.stroke(this.board[0][randomIndex].shape);
+                    context.fill(this.board['settleSlot'][randomIndex].shape);
+                    context.stroke(this.board['settleSlot'][randomIndex].shape);
                     context.restore();
                     tries = false;
                 };
@@ -377,12 +374,17 @@ class DevelopmentCard extends Card {
     }
 }
 
-class Board {
+class Slot {
 
-    constructor () {
-        this.grid = {
-
-        }
+    constructor (x, y, shape, type) {
+        this.type = type;
+        this.x = x;
+        this.y = y;
+        this.shape = shape;
+        this.neigh = {settleSlot: [],
+                      roadSlot: [],
+                      hexagon: []
+        } 
 
     }
 

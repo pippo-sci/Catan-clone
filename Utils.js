@@ -49,14 +49,12 @@ export const rotate = (x, y, xo, yo, theta) => {
     return {x: xr, y: yr};
 }
 
-export const polyInNotList = (context, list, x, y) => {
+export const polyNotInList = (context, list, x, y) => {
     
     let flag = true;
     const matchedIndex = [];
     for (let j = 0; j < list.length; j++){
-        if(list[j].type == "hexagon") {
-            continue;
-        } else if(context.isPointInPath(list[j]['shape'], x, y)) {
+        if(context.isPointInPath(list[j]['shape'], x, y)) {
             flag = false;
             matchedIndex.push(j);
         }
