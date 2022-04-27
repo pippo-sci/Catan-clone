@@ -1,6 +1,15 @@
 // Main Menu
 import { drawHexagon, randomRange, rotate, polyNotInList, mod, rotatedRect } from "./Utils.js";
 
+//Colors
+
+const borderColor = "#ffff99";
+const lineColor = 'gray';
+
+
+// Get elements
+
+
 const name = document.getElementById("name").lastChild;
 const score = document.getElementById("score").lastChild;
 const hand = document.getElementById("hand").lastChild;
@@ -33,7 +42,7 @@ canvas.addEventListener("click", event => {
     if (typeof game !== 'undefined'){
         game.board['roadSlot'].forEach((settle, index) => {
             context.save();
-            context.strokeStyle = 'gray';
+            context.strokeStyle = lineColor;
             if (context.isPointInPath(settle.shape, event.offsetX, event.offsetY)){
                 context.fillStyle = 'red';
                 context.fill(settle.shape);
@@ -47,7 +56,7 @@ canvas.addEventListener("click", event => {
                     context.restore();
                 }
             } else {
-                context.fillStyle = typeof settle['settleColor'] != 'undefined'? settle.settleColor: "white";
+                context.fillStyle = typeof settle['settleColor'] != 'undefined'? settle.settleColor: borderColor;
                 context.fill(settle.shape);
                 context.stroke(settle.shape);
             }
@@ -142,7 +151,8 @@ const createBoard = () => {
         context.fillStyle = terranTypes[randomRange(0,terranTypes.length + 1)];
         
         context.save();
-        const borders = drawHexagon(context, x, y, w/2);
+        const radius = w/2;
+        const borders = drawHexagon(context, x, y, radius);
         const number = randomRange(1,7)+randomRange(1,7);
         context.font = "30px Arial";
         context.fillStyle = 'black';
@@ -161,24 +171,37 @@ const createBoard = () => {
                 let circle = new Path2D();
                 let centreX, centreY;
                 if (index == 0){
+                    const cornerRadious = 6;
                     c = rotate(c.x, c.y, 0, 0, 90);
                     centreX = c.x + x;
                     centreY = c.y + y;
-                    circle.arc(centreX, centreY, 6, 0, 2 * Math.PI);
+                    
+                    circle.arc(centreX, centreY, cornerRadious, 0, 2 * Math.PI);
+
                 } else {
                     const empty = new Path2D();
+
+                    const middleSide = radius/2;
+                    const disCentre2Border = Math.sqrt(radius ** 2 - middleSide ** 2);
+                    const roadWidth = 6;
+
+                    c = {x: c.x + x, y: c.y + y};
+                    c = rotate(c.x, c.y, x, y, 60);
+                    //console.log(c);
                     c = rotate(c.x, c.y, x, y, 90);
-                    centreX = c.x + x; centreY = c.y + y;
-                    //empty.rect(0,0,1,1);
+                    //console.log(c);
+                    centreX = c.x; centreY = c.y;
+                    //circle.rect(centreX, centreY, middleSide*2, roadWidth);
+
+                    
                     context.save();
                     context.translate(x, y);
-                    context.rotate( (60 * ii) / 180 * Math.PI);
+                    context.rotate( (60 * (ii)) / 180 * Math.PI);
                     context.rotate( 90 / 180 * Math.PI);
                     const m = context.getTransform();
-                    empty.rect(-24, 49, w/2.5, 6);
+                    empty.rect(-middleSide, disCentre2Border - roadWidth/2, middleSide*2, roadWidth);
                     context.restore();
                     circle.addPath(empty, m);
-                    console.log(c);
                     
                 }
                 
@@ -211,25 +234,26 @@ const createBoard = () => {
     console.log(graph);
 
     //additional loop to draw cicles on top of hexagones
-    for (let j = 0; j < graph.settleSlot.length;j++){
-        context.save();
-        context.fillStyle = 'white';
-        context.strokeStyle = 'gray';
-        context.fill(graph.settleSlot[j].shape);
-        context.stroke(graph.settleSlot[j].shape);
-        context.restore();    
-    }
-
     for (let j = 0; j < graph.roadSlot.length; j++){
         context.save();
-        context.fillStyle = 'white';
-        context.strokeStyle = 'gray';
+        context.fillStyle = borderColor;
+        context.strokeStyle = lineColor;
         //context.translate(graph.roadSlot[j].x, graph.roadSlot[j].y);
         //context.rotate(45 / 180 * Math.PI);
         context.fill(graph.roadSlot[j].shape);
         context.stroke(graph.roadSlot[j].shape);
         context.restore();
     }
+
+    for (let j = 0; j < graph.settleSlot.length;j++){
+        context.save();
+        context.fillStyle = borderColor;
+        context.strokeStyle = lineColor;
+        context.fill(graph.settleSlot[j].shape);
+        context.stroke(graph.settleSlot[j].shape);
+        context.restore();    
+    }
+
 
     // Populate reciprocity networks: hexagon - settle
     for (let j = 0; j < graph.hexagon.length;j++){
@@ -243,7 +267,20 @@ const createBoard = () => {
             if (!graph['settleSlot'][k].neigh.settleSlot.includes(next)){
                 graph['settleSlot'][k].neigh.settleSlot.push(next); //add next neigh
             }
+
+        });
+
+        graph.hexagon[j].neigh.roadSlot.forEach((k, index) =>{
+            graph.roadSlot[k].neigh['hexagon'].push(j); //add hexagon
             
+            const prev2 = graph['hexagon'][j].neigh.roadSlot[mod(index - 1, 6)];
+            const next2 = graph['hexagon'][j].neigh.roadSlot[mod(index + 1, 6)];
+            if (!graph['roadSlot'][k].neigh.roadSlot.includes(prev2)){
+                graph['roadSlot'][k].neigh.roadSlot.push(prev2); //add prev neigh
+            }
+            if (!graph['roadSlot'][k].neigh.roadSlot.includes(next2)){
+                graph['roadSlot'][k].neigh.roadSlot.push(next2); //add next neigh
+            } 
         });
     }
     return graph;
