@@ -40,7 +40,23 @@ let currentSlot;
 
 canvas.addEventListener("click", event => {
     if (typeof game !== 'undefined'){
-        game.board['roadSlot'].forEach((settle, index) => {
+        game.board['roadSlot'].forEach((road, index) => {
+            context.save();
+            context.strokeStyle = lineColor;
+            if (context.isPointInPath(road.shape, event.offsetX, event.offsetY)){
+                context.fillStyle = 'red';
+                context.fill(road.shape);
+                currentSlot = index;
+                hand.innerHTML = `${currentSlot} - ${event.offsetX}, ${event.offsetY}`;
+            } else {
+                context.fillStyle = typeof road['settleColor'] != 'undefined'? road.settleColor: borderColor;
+                context.fill(road.shape);
+                context.stroke(road.shape);
+            }
+            context.restore();
+            
+        })
+        game.board['settleSlot'].forEach((settle, index) => {
             context.save();
             context.strokeStyle = lineColor;
             if (context.isPointInPath(settle.shape, event.offsetX, event.offsetY)){
@@ -49,12 +65,6 @@ canvas.addEventListener("click", event => {
                 currentSlot = index;
                 hand.innerHTML = `${currentSlot} - ${event.offsetX}, ${event.offsetY}`;
                 
-                for (let n of settle.neigh.settleSlot) {
-                    context.save();
-                    context.fillStyle = "green";
-                    context.fill(game.board['settleSlot'][n].shape)
-                    context.restore();
-                }
             } else {
                 context.fillStyle = typeof settle['settleColor'] != 'undefined'? settle.settleColor: borderColor;
                 context.fill(settle.shape);
@@ -172,6 +182,7 @@ const createBoard = () => {
                 let centreX, centreY;
                 if (index == 0){
                     const cornerRadious = 6;
+                    c = rotate(c.x, c.y, 0,0, 60);
                     c = rotate(c.x, c.y, 0, 0, 90);
                     centreX = c.x + x;
                     centreY = c.y + y;
@@ -187,11 +198,8 @@ const createBoard = () => {
 
                     c = {x: c.x + x, y: c.y + y};
                     c = rotate(c.x, c.y, x, y, 60);
-                    //console.log(c);
                     c = rotate(c.x, c.y, x, y, 90);
-                    //console.log(c);
                     centreX = c.x; centreY = c.y;
-                    //circle.rect(centreX, centreY, middleSide*2, roadWidth);
 
                     
                     context.save();
@@ -199,7 +207,7 @@ const createBoard = () => {
                     context.rotate( (60 * (ii)) / 180 * Math.PI);
                     context.rotate( 90 / 180 * Math.PI);
                     const m = context.getTransform();
-                    empty.rect(-middleSide, disCentre2Border - roadWidth/2, middleSide*2, roadWidth);
+                    empty.rect(-middleSide + 6, disCentre2Border - roadWidth/2, middleSide*2 - 8, roadWidth);
                     context.restore();
                     circle.addPath(empty, m);
                     
@@ -268,6 +276,15 @@ const createBoard = () => {
                 graph['settleSlot'][k].neigh.settleSlot.push(next); //add next neigh
             }
 
+            const prevEdge = graph['hexagon'][j].neigh.roadSlot[mod(index - 1, 6)];
+            const nextEdge = graph['hexagon'][j].neigh.roadSlot[mod(index, 6)];
+            if (!graph['settleSlot'][k].neigh.roadSlot.includes(prevEdge)){
+                graph['settleSlot'][k].neigh.roadSlot.push(prevEdge); //add prev neigh
+            }
+            if (!graph['settleSlot'][k].neigh.roadSlot.includes(nextEdge)){
+                graph['settleSlot'][k].neigh.roadSlot.push(nextEdge); //add next neigh
+            }
+
         });
 
         graph.hexagon[j].neigh.roadSlot.forEach((k, index) =>{
@@ -280,6 +297,15 @@ const createBoard = () => {
             }
             if (!graph['roadSlot'][k].neigh.roadSlot.includes(next2)){
                 graph['roadSlot'][k].neigh.roadSlot.push(next2); //add next neigh
+            } 
+
+            const prevSettle = graph['hexagon'][j].neigh.settleSlot[mod(index, 6)];
+            const nextSettle = graph['hexagon'][j].neigh.settleSlot[mod(index + 1, 6)];
+            if (!graph['roadSlot'][k].neigh.settleSlot.includes(prevSettle)){
+                graph['roadSlot'][k].neigh.settleSlot.push(prevSettle); //add prev neigh
+            }
+            if (!graph['roadSlot'][k].neigh.settleSlot.includes(nextSettle)){
+                graph['roadSlot'][k].neigh.settleSlot.push(nextSettle); //add next neigh
             } 
         });
     }
