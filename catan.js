@@ -1,5 +1,5 @@
 // Main Menu
-import { drawHexagon, randomRange, rotate, polyNotInList, mod, rotatedRect } from "./Utils.js";
+import { drawHexagon, randomRange, rotate, polyNotInList, mod, PickWithoutRepeat } from "./Utils.js";
 
 //Colors
 
@@ -27,13 +27,18 @@ canvas.width = 600;
 canvas.height = 600;
 const context = canvas.getContext("2d");
 
-context.save();
-context.strokeStyle = 'gray';
-context.fillStyle = 'LightSkyBlue';
-context.translate(canvas.width /2, canvas.height /2);
-context.rotate(90 / 180 * Math.PI);
-const __ = drawHexagon(context, 0, 0, canvas.width / 2);
-context.restore();
+const basicBoard = () => {
+    
+    context.save();
+    context.strokeStyle = 'gray';
+    context.fillStyle = 'LightSkyBlue';
+    context.translate(canvas.width /2, canvas.height /2);
+    context.rotate(90 / 180 * Math.PI);
+    const __ = drawHexagon(context, 0, 0, canvas.width / 2);
+    context.restore();
+}
+
+basicBoard();
 
 let game;
 let currentSlot;
@@ -107,6 +112,9 @@ endTurn.addEventListener("click", () => {
 })
 
 newGame.addEventListener("click", () => {
+
+    context.clearRect(0, 0, 600, 600);
+    basicBoard();
 
     const colors = ["darkBlue", "orange", "darkRed", "gray"]
     const playerList = [];
@@ -225,7 +233,6 @@ const createBoard = () => {
                         graph[levelType].push(slot); 
                         neighIndex.push(graph[levelType].length - 1);
                     } else {
-                        //console.log(match[1]);
                         neighIndex = neighIndex.concat(match[1]);
                     }
                 }
@@ -239,15 +246,13 @@ const createBoard = () => {
         });
 
     }
-    console.log(graph);
+    
 
     //additional loop to draw cicles on top of hexagones
     for (let j = 0; j < graph.roadSlot.length; j++){
         context.save();
         context.fillStyle = borderColor;
         context.strokeStyle = lineColor;
-        //context.translate(graph.roadSlot[j].x, graph.roadSlot[j].y);
-        //context.rotate(45 / 180 * Math.PI);
         context.fill(graph.roadSlot[j].shape);
         context.stroke(graph.roadSlot[j].shape);
         context.restore();
@@ -263,7 +268,7 @@ const createBoard = () => {
     }
 
 
-    // Populate reciprocity networks: hexagon - settle
+    // Populate reciprocity networks: hexagon - settle - road
     for (let j = 0; j < graph.hexagon.length;j++){
         graph.hexagon[j].neigh.settleSlot.forEach((k, index) =>{
             graph.settleSlot[k].neigh['hexagon'].push(j); //add hexagon
@@ -309,8 +314,50 @@ const createBoard = () => {
             } 
         });
     }
+    
+    // Add ports
+    
+    console.log(graph);
+ 
+    let borderEdges = [];
+    for (let hexa = 0; hexa < graph.roadSlot.length; hexa++) {
+        if (graph.roadSlot[hexa].neigh.hexagon.length == 1){
+            borderEdges.push(hexa);
+        }
+    }
+
+    console.log(borderEdges);
+    const select = PickWithoutRepeat(borderEdges,9);
+    console.log(select);
+
+    for (let hex of select) {
+
+        const x = graph.roadSlot[hex].x;
+        const y = graph.roadSlot[hex].y;
+        const hexagonPositions = graph.hexagon[graph.roadSlot[hex].neigh.hexagon[0]].neigh.roadSlot;
+        const anglePort = hexagonPositions.indexOf(hex);
+        const portW = 6;
+        const portH = 20;
+        graph['ports'] = {x,y};
+        //console.log(hexagonPositions);
+        context.save();
+        context.fillStyle = 'black';
+        context.translate(x, y);
+        context.rotate((60 * anglePort) / 180 * Math.PI);
+        context.rotate(15 / 180 * Math.PI);
+        context.beginPath();
+        context.rect(-portH, 15, portH, portW);
+        context.rotate(-30 / 180 * Math.PI);
+        context.rect(-portH, -15, portH, portW);
+        context.closePath();
+        context.fill();
+        context.restore();
+    }
+
+
     return graph;
 }
+
 
 
 // Game classes

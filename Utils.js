@@ -86,3 +86,23 @@ export const polyNotInList = (context, list, x, y) => {
 export const mod = (n, m) => {
     return ((n % m) + m) % m;
   }
+
+export const PickWithoutRepeat = (List, n) => {
+    let randNums = [];
+    let continueLoop = n;
+    let j;
+
+    while(continueLoop--){
+        j = Math.floor(Math.random() * (continueLoop + 1));
+
+        randNums.push(List[j]);
+        const prev = List[mod(j - 1, List.length)];
+        const post = List[mod(j + 1, List.length)];
+        List.splice(j, 1);
+        List.splice(List.indexOf(prev), 1);
+        List.splice(List.indexOf(post), 1);
+        
+        
+    }
+    return randNums;
+}
