@@ -313,6 +313,20 @@ const createBoard = () => {
                 graph['roadSlot'][k].neigh.settleSlot.push(nextSettle); //add next neigh
             } 
         });
+
+        //complete reciprocal relations
+        graph.roadSlot.forEach((road, index)=>{
+            //go to neigh and check if he is present
+            for (let i of road.neigh.settleSlot){
+                for (let j of graph.settleSlot[i].neigh.roadSlot){
+                    if (j!=index && !road.neigh.roadSlot.includes(j)){
+
+                        road.neigh.roadSlot.push(j);
+                    }
+                }
+                
+            }
+        });
     }
     
     // Add ports
@@ -320,11 +334,29 @@ const createBoard = () => {
     console.log(graph);
  
     let borderEdges = [];
-    for (let hexa = 0; hexa < graph.roadSlot.length; hexa++) {
+
+    borderEdges.push(0);
+
+    while(true) {
+        let current = graph.roadSlot[borderEdges.at(-1)];
+        let count = 0;
+        for (let n of current.neigh.roadSlot){
+            if (graph.roadSlot[n].neigh.hexagon.length == 1 && !borderEdges.includes(n)){
+                borderEdges.push(n);
+                count += 1;
+            } 
+        }
+        if (count == 0){
+            break;
+        }
+    }
+
+
+    /*for (let hexa = 0; hexa < graph.roadSlot.length; hexa++) {
         if (graph.roadSlot[hexa].neigh.hexagon.length == 1){
             borderEdges.push(hexa);
         }
-    }
+    }*/
 
     console.log(borderEdges);
     const select = PickWithoutRepeat(borderEdges,9);
@@ -339,7 +371,7 @@ const createBoard = () => {
         const portW = 6;
         const portH = 20;
         graph['ports'] = {x,y};
-        //console.log(hexagonPositions);
+    
         context.save();
         context.fillStyle = 'black';
         context.translate(x, y);
