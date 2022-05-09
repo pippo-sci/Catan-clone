@@ -14,18 +14,17 @@ const resources = {'grass':'LimeGreen',
                    'rock':'lightBlue', 
                    'wheat':'yellow'};
 
-
 // Get elements
 
 
 const name = document.getElementById("name").lastChild;
 const score = document.getElementById("score").lastChild;
-const hand = document.getElementById("hand").lastChild;
+const hand = document.getElementById("hand");
 const dices = document.getElementById("dices");
 
 name.innerHTML = "No player";
 score.innerHTML = "0";
-hand.innerHTML = "None";
+//hand.innerHTML = "";
 
 const newGame = document.getElementById("newGame");
 const rollDice = document.getElementById("rollDice");
@@ -35,6 +34,27 @@ const canvas = document.getElementsByTagName("canvas")[0];
 canvas.width = 600;
 canvas.height = 600;
 const context = canvas.getContext("2d");
+
+const resourceButtons = (htmlElement) => {
+
+    let resourceButtons = {};
+
+    for (let k of Object.keys(resources)){
+        resourceButtons[k] = document.createElement('button');
+        resourceButtons[k].innerHTML = k;
+        resourceButtons[k].name = k;
+        resourceButtons[k].style.backgroundColor = resources[k];
+        resourceButtons[k].style.display = 'inline';
+        resourceButtons[k + "0"] = document.createElement('div');
+        resourceButtons[k + "0"].style.display = 'block';
+        resourceButtons[k + "0"].innerHTML = 0;
+        htmlElement.appendChild(resourceButtons[k]);
+        resourceButtons[k].appendChild(resourceButtons[k + "0"]);
+    }
+    console.log(htmlElement);
+    return resourceButtons;
+    
+}
 
 const basicBoard = () => {
     
@@ -126,6 +146,7 @@ endTurn.addEventListener("click", () => {
     
 })
 
+
 newGame.addEventListener("click", () => {
 
     context.clearRect(0, 0, 600, 600);
@@ -144,9 +165,12 @@ newGame.addEventListener("click", () => {
     exchange.disabled = true;
     endTurn.style.display = "inline";
     endTurn.disabled = true;
+
+    game.buttons = resourceButtons(hand);
     
     game.nextTurn();
 })
+
 
 /**
  * canvas, context, resources
@@ -424,6 +448,7 @@ class Game {
         this.turn = 0;
         this.dicesValue;
         this.dicesRolled = false;
+        this.buttons;
 
     }
 
@@ -460,6 +485,8 @@ class Game {
         }
     }
 
+
+
     nextTurn() {
 
         let currentPlayer;
@@ -467,7 +494,12 @@ class Game {
 
         name.innerHTML = currentPlayer.name;
         score.innerHTML = currentPlayer.score;
-        hand.innerHTML = `${JSON.stringify(currentPlayer.hand.resources)}`;
+        console.log(this.buttons);
+        Object.keys(currentPlayer.hand.resources).forEach((r) => {
+            this.buttons[r + "0"].innerHTML = currentPlayer.hand.resources[r];
+        })
+
+        //hand.innerHTML = `${JSON.stringify(currentPlayer.hand.resources)}`;
         //currentPlayer.turn();
         if (currentPlayer.score >= 10){
             alert(`${currentPlayer.name} won`);
@@ -489,7 +521,9 @@ class Game {
         }
         let currentPlayer;
         currentPlayer = this.playersList[this.turn % this.playersList.length];
-        hand.innerHTML = `${JSON.stringify(currentPlayer.hand.resources)}`;
+        Object.keys(currentPlayer.hand.resources).forEach((r) => {
+            this.buttons[r + "0"].innerHTML = currentPlayer.hand.resources[r];
+        })
     }
 }
 
