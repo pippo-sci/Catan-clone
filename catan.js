@@ -6,6 +6,14 @@ import { drawHexagon, randomRange, rotate, polyNotInList, mod, PickWithoutRepeat
 const borderColor = "#ffff99";
 const lineColor = 'gray';
 
+// Elements
+
+const resources = {'grass':'LimeGreen', 
+                   'brick': 'brown', 
+                   'wood': 'darkGreen', 
+                   'rock':'lightBlue', 
+                   'wheat':'yellow'};
+
 
 // Get elements
 
@@ -21,6 +29,7 @@ hand.innerHTML = "None";
 
 const newGame = document.getElementById("newGame");
 const rollDice = document.getElementById("rollDice");
+const exchange = document.getElementById("exchange");
 const endTurn = document.getElementById("endTurn");
 const canvas = document.getElementsByTagName("canvas")[0];
 canvas.width = 600;
@@ -91,11 +100,16 @@ rollDice.addEventListener("click", () => {
         game.dicesValue = dice1+dice2;
         game.dicesRolled = true;
         rollDice.disabled = true;
+        exchange.disabled = false;
         endTurn.disabled = false;
         game.reward();
     } else {
         alert("Dices already rolled");
     }
+})
+
+exchange.addEventListener('click', () => {
+    console.log("exchange");
 })
 
 endTurn.addEventListener("click", () => {
@@ -104,6 +118,7 @@ endTurn.addEventListener("click", () => {
         game.dicesRolled = false;
         game.nextTurn();
         rollDice.disabled = false;
+        exchange.disabled = true;
         endTurn.disabled = true;
     } else {
         alert("roll dices first");
@@ -116,29 +131,32 @@ newGame.addEventListener("click", () => {
     context.clearRect(0, 0, 600, 600);
     basicBoard();
 
-    const colors = ["darkBlue", "orange", "darkRed", "gray"]
+    const playerColors = ["darkBlue", "orange", "red", "gray"]
     const playerList = [];
     for (let i = 0; i < 4;i++){
-        playerList.push(new Player(`Player ${colors[i]}${i + 1}`, colors[i]));
+        playerList.push(new Player(`Player ${playerColors[i]}${i + 1}`, playerColors[i]));
     }
     
     game = new Game(playerList);
     game.randomInit();
     rollDice.style.display = "inline";
+    exchange.style.display = 'inline';
+    exchange.disabled = true;
     endTurn.style.display = "inline";
     endTurn.disabled = true;
     
     game.nextTurn();
 })
 
-
+/**
+ * canvas, context, resources
+ * @returns 
+ */
 const createBoard = () => {
     
     const margin = 20;
     const w = (canvas.width) / 5;
     const h = (canvas.height) / 5;
-    
-    const terranTypes = ['brown','darkGreen','lightBlue','red','yellow','LimeGreen','beige']
     
     let r;
     let a = 0;
@@ -153,6 +171,8 @@ const createBoard = () => {
         roadSlot: []
     }; 
     const types = ["settleSlot", "roadSlot", "hexagon"];
+    const terranTypes = Object.values(resources);
+    terranTypes.push('beige'); //desert color
     
     for (let i = 0; i < totalHex; i++){
         
@@ -165,19 +185,20 @@ const createBoard = () => {
     
         const x = (i - a) * w * 0.87 + (w * (longestRow - r) * 0.43) + w * 0.75; 
         const y = b * h * 0.75 + margin * 3 + h/2;
-    
-        context.fillStyle = terranTypes[randomRange(0,terranTypes.length + 1)];
+
+        const terrain = randomRange(0, terranTypes.length);
+        context.fillStyle = terranTypes[terrain];
         
         context.save();
         const radius = w/2;
         const borders = drawHexagon(context, x, y, radius);
-        const number = randomRange(1,7)+randomRange(1,7);
+        const number = randomRange(1, 7) + randomRange(1, 7);
         context.font = "30px Arial";
         context.fillStyle = 'black';
-        context.fillText(number, x-10, y+10);
+        context.fillText(number, x - 10, y + 10);
         context.restore();
        
-        graph['hexagon'].push({x: x, y: y, number: number, resources: context.fillStyle, neigh: {settleSlot: [], roadSlot: []}});           
+        graph['hexagon'].push({x: x, y: y, number: number, resources: Object.keys(resources)[terrain], neigh: {settleSlot: [], roadSlot: []}});           
         
         borders.forEach((corner, index) => {
             
@@ -212,7 +233,7 @@ const createBoard = () => {
                     
                     context.save();
                     context.translate(x, y);
-                    context.rotate( (60 * (ii)) / 180 * Math.PI);
+                    context.rotate( (60 * ii) / 180 * Math.PI);
                     context.rotate( 90 / 180 * Math.PI);
                     const m = context.getTransform();
                     empty.rect(-middleSide + 6, disCentre2Border - roadWidth/2, middleSide*2 - 8, roadWidth);
@@ -320,7 +341,6 @@ const createBoard = () => {
             for (let i of road.neigh.settleSlot){
                 for (let j of graph.settleSlot[i].neigh.roadSlot){
                     if (j!=index && !road.neigh.roadSlot.includes(j)){
-
                         road.neigh.roadSlot.push(j);
                     }
                 }
@@ -352,15 +372,10 @@ const createBoard = () => {
     }
 
 
-    /*for (let hexa = 0; hexa < graph.roadSlot.length; hexa++) {
-        if (graph.roadSlot[hexa].neigh.hexagon.length == 1){
-            borderEdges.push(hexa);
-        }
-    }*/
-
     console.log(borderEdges);
     const select = PickWithoutRepeat(borderEdges,9);
     console.log(select);
+    
 
     for (let hex of select) {
 
@@ -370,10 +385,13 @@ const createBoard = () => {
         const anglePort = hexagonPositions.indexOf(hex);
         const portW = 6;
         const portH = 20;
-        graph['ports'] = {x,y};
+        const resource = Object.keys(resources)[randomRange(0, Object.keys(resources).length)];
+        graph.roadSlot[hex].neigh.settleSlot.forEach(s =>{
+            graph.settleSlot[s].addPort(resource);
+        });
     
         context.save();
-        context.fillStyle = 'black';
+        context.fillStyle = 'brown';
         context.translate(x, y);
         context.rotate((60 * anglePort) / 180 * Math.PI);
         context.rotate(15 / 180 * Math.PI);
@@ -381,9 +399,12 @@ const createBoard = () => {
         context.rect(-portH, 15, portH, portW);
         context.rotate(-30 / 180 * Math.PI);
         context.rect(-portH, -15, portH, portW);
+        context.fillText(resource, -portH * 2 , 0);
+        context.fillText("2:1", -portH * 2 , 10);
         context.closePath();
         context.fill();
         context.restore();
+
     }
 
 
@@ -442,12 +463,11 @@ class Game {
     nextTurn() {
 
         let currentPlayer;
-        
         currentPlayer = this.playersList[this.turn % this.playersList.length];
 
         name.innerHTML = currentPlayer.name;
         score.innerHTML = currentPlayer.score;
-        hand.innerHTML = `${currentPlayer.hand.resources}`;
+        hand.innerHTML = `${JSON.stringify(currentPlayer.hand.resources)}`;
         //currentPlayer.turn();
         if (currentPlayer.score >= 10){
             alert(`${currentPlayer.name} won`);
@@ -461,12 +481,15 @@ class Game {
                 for(let s of h.neigh.settleSlot) {
                     for (let p of this.playersList){
                         if (p.color == this.board.settleSlot[s].settleColor){
-                            p.hand.resources.push(h.resources);
+                            p.hand.resources[h.resources] += 1;
                         }
                     }
                 }
             }
         }
+        let currentPlayer;
+        currentPlayer = this.playersList[this.turn % this.playersList.length];
+        hand.innerHTML = `${JSON.stringify(currentPlayer.hand.resources)}`;
     }
 }
 
@@ -477,7 +500,11 @@ class Player {
         this.color = color;
         this.score = 0;
         this.name = name;
-        this.hand = {resources: [],
+        this.hand = {resources: {grass: 0,
+                                 brick: 0,
+                                 wood: 0,
+                                 rock: 0,
+                                 wheat: 0},
                     build: [],
                     development: [],
                     knights: []};
@@ -583,7 +610,12 @@ class Slot {
                       roadSlot: [],
                       hexagon: []
         } 
+        this.port;
 
+    }
+
+    addPort(resource) {
+        this.port = resource;
     }
 
 }

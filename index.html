@@ -5,10 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settlers of CATAN-AI</title>
-
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="bar" style="text-align:center;padding:10px;height:30px;background-color:black;color:white;">
+    <div id="bar">
         CatanAI
         <div></div>
     </div>
@@ -20,25 +20,23 @@
             New game
         </button>
         <button id="rollDice" style="display:none;"> Roll dices</button>
+        <button id="exchange" style="display:none;"> Exchange</button>
         <button id="endTurn" style="display:none;"> End Turn</button>
+        <div style="text-align:left;padding:10px;display:inline;">
+            Dices:
+            <div id="dices" style="display:inline;"></div>
+        </div>
     </div>
     
-    <div  style="display:flex;justify-content:center;height:120px;background-color:rgb(146, 4, 4);color:white;">
-        <div style="text-align:left;padding:10px;margin:5px;width:25%;">
+    <div class="bottomBar">
+        <div class="area">
             Current Player:
             <div id="name" style="display:block;padding:5px">Name: <div style="display:inline;"></div></div>
             <div id="score" style="padding:5px;">Score: <div style="display:inline;"></div></div>
             
         </div>
-        <div style="text-align:left;padding:20px;margin:10px;width:25%;">
+        <div class="area">
             <div id="hand" style="padding:5px;">Hand: <div style="display:inline;"></div></div>
-        </div>
-        <div  style="text-align:left;padding:20px;margin:10px;width:25%;">
-            Dices
-            <div id="dices">
-
-            </div>
-            
         </div>
     </div>
 
