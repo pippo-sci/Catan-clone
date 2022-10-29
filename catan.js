@@ -21,6 +21,7 @@ const name = document.getElementById("name").lastChild;
 const score = document.getElementById("score").lastChild;
 const hand = document.getElementById("hand");
 const dices = document.getElementById("dices");
+const table = document.getElementById("table");
 
 name.innerHTML = "No player";
 score.innerHTML = "0";
@@ -51,10 +52,51 @@ const resourceButtons = (htmlElement) => {
         htmlElement.appendChild(resourceButtons[k]);
         resourceButtons[k].appendChild(resourceButtons[k + "0"]);
     }
-    console.log(htmlElement);
     return resourceButtons;
     
 }
+
+const costTable = (htmlElement) => {
+    const table = {
+        settle: { 
+            brick: 1,
+            wood: 1,
+            grass: 1,
+            wheat: 1
+        },
+        road: {
+            brick: 1,
+            grass: 1
+        },
+        city: {
+            rock: 3,
+            wheat: 2
+        },
+        development: {
+            grass: 1,
+            rock: 1,
+            wheat: 1
+        }
+    }
+    
+    let buyItem = {}
+
+    for (let k of Object.keys(table)){
+        buyItem[k] = document.createElement('button');
+        buyItem[k].innerHTML = k;
+        buyItem[k].name = k;
+        buyItem[k].style.display = 'inline';
+        buyItem[k + "0"] = document.createElement('div');
+        buyItem[k + "0"].style.display = 'block';
+        buyItem[k + "0"].innerHTML = 0;
+        htmlElement.appendChild(buyItem[k]);
+        buyItem[k].appendChild(buyItem[k + "0"]);
+    }
+    console.log(htmlElement);
+    return buyItem;
+        
+}
+
 
 const basicBoard = () => {
     
@@ -66,6 +108,12 @@ const basicBoard = () => {
     const __ = drawHexagon(context, 0, 0, canvas.width / 2);
     context.restore();
 }
+
+
+
+
+// Init board
+
 
 basicBoard();
 
@@ -166,7 +214,8 @@ newGame.addEventListener("click", () => {
     endTurn.style.display = "inline";
     endTurn.disabled = true;
 
-    game.buttons = resourceButtons(hand);
+    game.resourceButtons = resourceButtons(hand);
+    game.buyButtons = costTable(table);
     
     game.nextTurn();
 })
@@ -420,12 +469,24 @@ const createBoard = () => {
         context.rotate((60 * anglePort) / 180 * Math.PI);
         context.rotate(15 / 180 * Math.PI);
         context.beginPath();
-        context.rect(-portH, 15, portH, portW);
-        context.rotate(-30 / 180 * Math.PI);
+        context.rect(-portH + 3, 15, portH, portW);
+        context.closePath();
+        context.fill();
+        context.restore();
+
+        context.save();
+        context.fillStyle = 'brown';
+        context.translate(x, y);
+        context.rotate((60 * anglePort) / 180 * Math.PI);
+        context.rotate(-15 / 180 * Math.PI);
+        context.beginPath();
         context.rect(-portH, -15, portH, portW);
+        context.closePath();
+        context.fill();
+
         context.fillText(resource, -portH * 2 , 0);
         context.fillText("2:1", -portH * 2 , 10);
-        context.closePath();
+        //context.closePath();
         context.fill();
         context.restore();
 
@@ -448,7 +509,8 @@ class Game {
         this.turn = 0;
         this.dicesValue;
         this.dicesRolled = false;
-        this.buttons;
+        this.resourceButtons;
+        this.buyButtons;
 
     }
 
